@@ -6,12 +6,20 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "setup": "node --env-file=.env.local scripts/setup-db.mjs",
+    "uji": "node --env-file=.env.local scripts/uji-api.mjs"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "echarts": "^6.1.0",
+    "jose": "^6.2.13",
+    "lucide-react": "^1.60.0",
     "next": "16.4.2",
+    "postgres": "^3.4.9",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",

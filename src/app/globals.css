@@ -1,26 +1,117 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Palet diturunkan dari shader "Mesh drift" (21st.dev): hijau tua → hijau padi → lime → krem. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --surface: #f5f6f0;
+  --card: #ffffff;
+  --card-soft: #f9faf6;
+  --ink: #0b1f18;
+  --muted: #5b6b63;
+  --line: #e2e6dc;
+  --brand: #0e7c5a;
+  --brand-strong: #0a5e44;
+  --brand-soft: #e3f3ea;
+  --lime: #7ce577;
+  --cream: #f4ffc7;
+  --konsumsi: #c98a12;
+  --konsumsi-soft: #fbf0d9;
+  --neg: #c2462b;
+  --neg-soft: #fbe6e0;
+  --ring: rgba(14, 124, 90, 0.35);
+}
+
+.dark {
+  --surface: #06130f;
+  --card: #0c1d17;
+  --card-soft: #10251d;
+  --ink: #e8f2ec;
+  --muted: #8fa69a;
+  --line: #1c3329;
+  --brand: #34b37f;
+  --brand-strong: #7ce577;
+  --brand-soft: #123528;
+  --konsumsi: #e8b04a;
+  --konsumsi-soft: #33280f;
+  --neg: #f0805f;
+  --neg-soft: #3a1a12;
+  --ring: rgba(124, 229, 119, 0.35);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-surface: var(--surface);
+  --color-card: var(--card);
+  --color-card-soft: var(--card-soft);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-lime: var(--lime);
+  --color-cream: var(--cream);
+  --color-konsumsi: var(--konsumsi);
+  --color-konsumsi-soft: var(--konsumsi-soft);
+  --color-neg: var(--neg);
+  --color-neg-soft: var(--neg-soft);
+  --font-sans: var(--font-jakarta);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 88px;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--card-soft) 25%, var(--line) 50%, var(--card-soft) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
 }
