@@ -13,8 +13,9 @@ export const metadata: Metadata = {
   description: "Analisis produksi dan konsumsi beras Indonesia per provinsi, 2025",
 };
 
-// Pasang class .dark sebelum render supaya tidak berkedip saat memuat.
-const themeScript = `try{var t=localStorage.getItem('tema');if(t==='gelap'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch(e){}`;
+// Default terang; mode gelap hanya kalau pengguna memilihnya lewat tombol tema.
+// Class .dark dipasang sebelum render supaya tidak berkedip saat memuat.
+const themeScript = `try{var t=localStorage.getItem('tema');if(t==='gelap')document.documentElement.classList.add('dark')}catch(e){}`;
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
