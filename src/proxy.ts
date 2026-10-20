@@ -1,12 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, readSessionToken } from "@/lib/session";
 
-// Gerbang akses (controlled interface): semua halaman dan API selain login
-// hanya bisa dibuka dengan session yang valid.
+// Gerbang akses (controlled interface): semua halaman dan API selain auth
+// hanya bisa dibuka dengan session yang valid. Halaman login dan registrasi
+// terbuka untuk umum, dan dialihkan ke dashboard kalau sudah punya session.
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const session = await readSessionToken(request.cookies.get(SESSION_COOKIE)?.value);
-  const isLogin = pathname === "/login";
+  const isLogin = pathname === "/login" || pathname === "/register";
   const isAuthApi = pathname.startsWith("/api/auth/");
 
   if (session && isLogin) return NextResponse.redirect(new URL("/", request.url));

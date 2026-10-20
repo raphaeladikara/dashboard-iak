@@ -1,6 +1,7 @@
 -- Skema Dashboard Padi 2025 untuk Supabase (PostgreSQL).
 -- Cara pakai: buka Supabase Dashboard → SQL Editor → tempel seluruh file ini → Run.
 -- Aman dijalankan ulang (idempotent). Setelah itu jalankan supabase/seed-admin.sql.
+-- Sudah termasuk registrasi + akun demo (lihat juga supabase/migrasi-registrasi.sql).
 
 -- 1. Tabel fakta hasil ETL Pentaho -------------------------------------------
 CREATE TABLE IF NOT EXISTS public.fakta_produksi_konsumsi_2025 (
@@ -144,7 +145,29 @@ CREATE POLICY app_login ON public.users FOR UPDATE TO iak_dashboard USING (true)
 DROP POLICY IF EXISTS app_audit ON public.login_audit;
 CREATE POLICY app_audit ON public.login_audit FOR ALL TO iak_dashboard USING (true) WITH CHECK (true);
 
--- 7. Validasi ----------------------------------------------------------------
+-- 7. Registrasi akun + login demo ---------------------------------------------
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
+
+-- Jenis kejadian di jejak audit: login, daftar, atau demo.
+ALTER TABLE public.login_audit ADD COLUMN IF NOT EXISTS jenis varchar(10) NOT NULL DEFAULT 'login';
+CREATE INDEX IF NOT EXISTS idx_audit_ip ON public.login_audit (ip, jenis, waktu DESC);
+
+-- Username dicocokkan tanpa membedakan huruf besar/kecil.
+CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower ON public.users (lower(username));
+
+-- Role aplikasi boleh membuat akun baru, tapi hanya mengisi 3 kolom ini.
+GRANT INSERT (username, nama, password_hash) ON public.users TO iak_dashboard;
+DROP POLICY IF EXISTS app_daftar ON public.users;
+CREATE POLICY app_daftar ON public.users FOR INSERT TO iak_dashboard WITH CHECK (true);
+
+-- Akun demo: password-nya hash dari string acak yang tidak disimpan di mana pun,
+-- jadi akun ini tidak bisa dibuka lewat form login, hanya lewat tombol demo.
+-- Hapus baris akun ini untuk mematikan login demo.
+INSERT INTO public.users (username, nama, password_hash)
+VALUES ('demo', 'Akun Demo', extensions.crypt(gen_random_uuid()::text, extensions.gen_salt('bf', 12)))
+ON CONFLICT DO NOTHING;
+
+-- 8. Validasi ----------------------------------------------------------------
 SELECT COUNT(*) AS jumlah_provinsi,
        COUNT(*) FILTER (WHERE produksi_padi_ton IS NULL) AS produksi_padi_kosong
 FROM public.fakta_produksi_konsumsi_2025;

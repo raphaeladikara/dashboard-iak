@@ -72,6 +72,11 @@ await uji("Login", "Login dengan akun benar", "200 + cookie httpOnly", async () 
   cookie = set.split(";")[0];
   return { ok: r.status === 200 && /httponly/i.test(set), aktual: `${r.status}, httpOnly=${/httponly/i.test(set)}` };
 });
+// Kalau SEED_ADMIN_PASSWORD tidak cocok dengan database, uji API tetap jalan pakai session demo.
+if (!cookie || !cookie.startsWith("padi_session=")) {
+  const r = await post("/api/auth/demo", {});
+  cookie = (r.headers.get("set-cookie") ?? "").split(";")[0];
+}
 
 // --- Fungsi dashboard (Anggota 4) ---
 const endpoints = [
@@ -140,6 +145,28 @@ await uji("Akses", "Logout lalu buka API", "401", async () => {
   // Browser menghapus cookie karena Max-Age=0; di sini dicek tanpa cookie.
   const r2 = await get("/api/kpi");
   return { ok: /max-age=0/i.test(cleared) && r2.status === 401, aktual: `logout ${r.status}, lalu ${r2.status}` };
+});
+
+// --- Registrasi dan akun demo ---
+await uji("Daftar", "Username sudah dipakai", "409", async () => {
+  const r = await post("/api/auth/register", { nama: "Uji Ganda", username: "demo", password: "password-uji-123" });
+  return { ok: r.status === 409, aktual: String(r.status) };
+});
+await uji("Daftar", "Isian tidak valid (username, password pendek)", "400 + pesan per kolom", async () => {
+  const r = await post("/api/auth/register", { nama: "A", username: "A B", password: "123" });
+  const b = await r.json();
+  const kolom = Object.keys(b.fields ?? {}).sort().join(",");
+  return { ok: r.status === 400 && kolom === "nama,password,username", aktual: `${r.status} [${kolom}]` };
+});
+await uji("Demo", "Akun demo lewat form login", "401 (hanya bisa lewat tombol demo)", async () => {
+  const r = await post("/api/auth/login", { username: "demo", password: "demo" });
+  return { ok: r.status === 401, aktual: String(r.status) };
+});
+await uji("Demo", "Login demo lalu buka API", "200 + cookie, KPI 200", async () => {
+  const r = await post("/api/auth/demo", {});
+  const c = (r.headers.get("set-cookie") ?? "").split(";")[0];
+  const k = await get("/api/kpi", c);
+  return { ok: r.status === 200 && k.status === 200, aktual: `demo ${r.status}, KPI ${k.status}` };
 });
 
 // --- Laporan ---

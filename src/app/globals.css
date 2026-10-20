@@ -20,6 +20,7 @@
   --neg: #c2462b;
   --neg-soft: #fbe6e0;
   --ring: rgba(14, 124, 90, 0.35);
+  --glow: #34b37f;
 }
 
 .dark {
@@ -37,6 +38,7 @@
   --neg: #f0805f;
   --neg-soft: #3a1a12;
   --ring: rgba(124, 229, 119, 0.35);
+  --glow: #7ce577;
 }
 
 @theme inline {
@@ -88,6 +90,41 @@ body {
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* BoxReveal halaman login/registrasi: kotak warna brand menyapu ke kanan, lalu isi naik. */
+.box-reveal {
+  position: relative;
+}
+.box-reveal-content {
+  animation: br-rise var(--br-dur) cubic-bezier(0.22, 1, 0.36, 1) calc(var(--br-delay) + 0.2s) both;
+}
+.box-reveal-box {
+  position: absolute;
+  inset: 4px 0;
+  z-index: 20;
+  border-radius: 6px;
+  background: var(--br-box);
+  pointer-events: none;
+  animation: br-slide var(--br-dur) ease-in var(--br-delay) both;
+}
+@keyframes br-rise {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes br-slide {
+  from {
+    left: 0;
+  }
+  to {
+    left: 100%;
   }
 }
 

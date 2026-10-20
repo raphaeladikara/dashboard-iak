@@ -10,6 +10,8 @@ Dashboard produksi dan konsumsi beras per provinsi tahun 2025, dibuat untuk Tuga
    Isinya: tabel fakta + 38 provinsi, tabel `users`, `login_audit`, `meta_tabel`, RLS aktif, dan role `iak_dashboard` yang hak aksesnya dibatasi.
 3. Query baru lagi, tempel [`supabase/seed-admin.sql`](supabase/seed-admin.sql). Ganti username dan `GANTI_PASSWORD_ADMIN`, lalu **Run**. Ini akun untuk login ke dashboard.
 
+4. Kalau database dibuat sebelum fitur registrasi ada, jalankan juga [`supabase/migrasi-registrasi.sql`](supabase/migrasi-registrasi.sql). File ini menambah izin daftar akun dan akun `demo` (sudah termasuk di `schema.sql` versi terbaru).
+
 Cara lain untuk langkah 2–3: isi `DATABASE_URL_ADMIN`, `APP_DB_PASSWORD`, dan `SEED_ADMIN_*` di `.env.local`, lalu jalankan `npm run setup`.
 
 ## 2. Isi `.env.local`
@@ -40,7 +42,17 @@ npm install
 npm run dev
 ```
 
-Buka http://localhost:3000 dan login dengan akun dari `seed-admin.sql`.
+Buka http://localhost:3000. Ada tiga cara masuk:
+
+- **Masuk sebagai akun demo**: tombol di halaman login/daftar, langsung membuka dashboard tanpa password.
+- **Daftar** di `/register`: nama, username, password (minimal 8 karakter). Setelah daftar langsung masuk.
+- **Login** dengan akun dari `seed-admin.sql` atau akun yang sudah didaftarkan.
+
+Cek konfigurasi keamanan database (role koneksi, RLS, policy, grant):
+
+```bash
+npm run cek
+```
 
 Pengujian otomatis (aplikasi harus sedang jalan, `BASE_URL` bisa diarahkan ke URL Vercel):
 
@@ -48,7 +60,7 @@ Pengujian otomatis (aplikasi harus sedang jalan, `BASE_URL` bisa diarahkan ke UR
 npm run uji
 ```
 
-Ada 29 skenario: login, hak akses, semua endpoint, dan kecocokan KPI dengan query SQL langsung. Tabel hasilnya tersimpan di `docs/hasil-uji.md` dan bisa langsung disalin ke BAB IV.
+Ada 33 skenario: login, registrasi, akun demo, hak akses, semua endpoint, dan kecocokan KPI dengan query SQL langsung. Tabel hasilnya tersimpan di `docs/hasil-uji.md` dan bisa langsung disalin ke BAB IV.
 
 ## 4. Deploy ke Vercel
 
@@ -85,6 +97,8 @@ Semua endpoint selain `/api/auth/*` butuh session. Tanpa session, balasannya 401
 |---|---|---|
 | `GET /api` | — | Katalog layanan |
 | `POST /api/auth/login` | business | Cek username dan password, buat cookie session httpOnly (berlaku 8 jam) |
+| `POST /api/auth/register` | business | Daftar akun baru (maks. 3 per IP per jam), lalu langsung masuk |
+| `POST /api/auth/demo` | business | Masuk sebagai akun `demo` tanpa password |
 | `POST /api/auth/logout` | business | Hapus cookie session |
 | `GET /api/provinsi` | data | 38 provinsi untuk filter |
 | `GET /api/kpi` | business | 5 KPI, angka nasional sebagai pembanding, dan peringkat provinsi |
@@ -102,6 +116,8 @@ Semua endpoint selain `/api/auth/*` butuh session. Tanpa session, balasannya 401
 - Session berupa JWT bertanda tangan HS256 di cookie `httpOnly` dengan `sameSite=lax`.
 - `src/proxy.ts` menjaga semua halaman dan API, lalu setiap route API memeriksa session sekali lagi.
 - Setelah 5 kali gagal dalam 10 menit untuk IP dan username yang sama, login diblokir sementara. Hitungannya diambil dari tabel `login_audit`, jadi tetap berlaku walaupun request dilayani instance Vercel yang berbeda.
+- Akun `demo` memakai hash dari string acak yang tidak disimpan, jadi hanya bisa dibuka lewat tombol demo, bukan lewat form login. Hapus baris `demo` di tabel `users` untuk mematikan login demo.
+- Registrasi dibatasi 3 akun baru per IP per jam. Role aplikasi hanya boleh mengisi kolom `username`, `nama`, dan `password_hash`.
 - Pesan gagal login sama untuk password salah maupun username yang tidak ada, jadi orang luar tidak bisa menebak username mana yang terdaftar.
 - Aplikasi konek ke Postgres sebagai role `iak_dashboard`, yang hanya punya hak `SELECT` pada tabel fakta. Semua tabel memakai RLS, jadi tidak bisa dibaca lewat anon key Supabase.
 - Semua query memakai parameter terikat (tagged template `postgres`), sehingga input pengguna tidak bisa menyisipkan SQL.
